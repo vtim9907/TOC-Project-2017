@@ -7,8 +7,8 @@ from flask import Flask, request, send_file
 from fsm import TocMachine
 
 
-API_TOKEN = 'Your Telegram API Token'
-WEBHOOK_URL = 'Your Webhook URL'
+API_TOKEN = 'API_TOKEN'
+WEBHOOK_URL = 'WEBHOOK_URL'
 
 app = Flask(__name__)
 bot = telegram.Bot(token=API_TOKEN)
@@ -16,26 +16,71 @@ machine = TocMachine(
     states=[
         'user',
         'state1',
-        'state2'
+        'state2',
+        'state3',
+        'state4',
+        'state5',
+        'state6',
+        'state7',
+        'state8'
     ],
     transitions=[
         {
             'trigger': 'advance',
             'source': 'user',
-            'dest': 'state1',
-            'conditions': 'is_going_to_state1'
+            'dest': 'state2',
+            'conditions': 'weather_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'state2',
+            'dest': 'state3',
+            'conditions': 'weather_city_query'
         },
         {
             'trigger': 'advance',
             'source': 'user',
-            'dest': 'state2',
-            'conditions': 'is_going_to_state2'
+            'dest': 'state4',
+            'conditions': 'air_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'state4',
+            'dest': 'state5',
+            'conditions': 'air_city_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'user',
+            'dest': 'state6',
+            'conditions': 'uv_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'state6',
+            'dest': 'state7',
+            'conditions': 'uv_city_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'user',
+            'dest': 'state8',
+            'conditions': 'uvi_query'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'user',
+            'dest': 'state1',
+            'conditions': 'default_query'
         },
         {
             'trigger': 'go_back',
             'source': [
                 'state1',
-                'state2'
+                'state3',
+                'state5',
+                'state7',
+                'state8'
             ],
             'dest': 'user'
         }
@@ -57,8 +102,9 @@ def _set_webhook():
 
 @app.route('/hook', methods=['POST'])
 def webhook_handler():
-    update = telegram.Update.de_json(request.get_json(force=True), bot)
-    machine.advance(update)
+    if request.method == "POST":
+        update = telegram.Update.de_json(request.get_json(force=True), bot)
+        machine.advance(update)
     return 'ok'
 
 
@@ -67,7 +113,7 @@ def show_fsm():
     byte_io = BytesIO()
     machine.graph.draw(byte_io, prog='dot', format='png')
     byte_io.seek(0)
-    return send_file(byte_io, attachment_filename='fsm.png', mimetype='image/png')
+    return send_file(byte_io, attachment_filename='ffsm.png', mimetype='image/png')
 
 
 if __name__ == "__main__":
